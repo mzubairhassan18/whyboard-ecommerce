@@ -66,11 +66,14 @@ export async function POST(request: Request) {
       };
 
       send("open", { question });
+      let reported = false;
       try {
         for await (const event of workspace.explainStream(question)) {
+          if (event.type === "error") reported = true;
           send(event.type, event);
         }
       } catch (error) {
+        if (reported) return;
         console.error("[chat]", error);
         send("error", {
           message:
